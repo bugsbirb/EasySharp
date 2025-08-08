@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 /// <summary>
 /// Represents the root response wrapper for the API response.
 /// </summary>
@@ -7,7 +9,8 @@ public class RootResponse<T>
     /// <summary>
     /// The result of the API call.
     /// </summary>
-    public required Result<T> Result { get; set; }
+    [JsonPropertyName("result")]
+    public Result<T>? Result { get; set; }
 }
 
 /// <summary>
@@ -18,8 +21,9 @@ public class Result<T>
 {
     /// <summary>
     /// The data container holding the JSON payload.
-/// </summary>
-    public required Data<T> Data { get; set; }
+    /// </summary>
+    [JsonPropertyName("data")]
+    public Data<T>? Data { get; set; }
 }
 
 /// <summary>
@@ -30,6 +34,7 @@ public class Data<T>
 {
     /// <summary>
     /// The actual JSON payload, varies by API endpoint.
-/// </summary>
-    public required T Json { get; set; }
+    /// </summary>
+    [JsonPropertyName("json")]
+    public T? Json { get; set; }
 }

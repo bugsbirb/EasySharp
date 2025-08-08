@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Text.Json;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace EasySharp
 {
@@ -50,7 +47,23 @@ namespace EasySharp
             return rootResponse?.Result?.Data?.Json?.Projects ?? new List<Project>();
         }
 
+        /// <summary>
+        /// Asynchronously fetches the list of services from the API.
+        /// </summary>
+        /// <returns>A list of <see cref="Service"/> instances.</returns>
+        /// <exception cref="HttpRequestException">Thrown when the HTTP response indicates failure.</exception>
+        public async Task<List<Service>> GetServicesAsync()
+        {
+            HttpResponseMessage response = await _client.GetAsync("/api/trpc/projects.listProjectsAndServices");
+            response.EnsureSuccessStatusCode();
 
+            string json = await response.Content.ReadAsStringAsync();
+            var rootResponse = JsonSerializer.Deserialize<RootResponse<Root>>(
+                json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }
+            );
+            return rootResponse?.Result?.Data?.Json?.services ?? new List<Service>();
+        }
 
         /// <summary>
         /// Gets the current user asynchronously.
@@ -78,7 +91,56 @@ namespace EasySharp
             };
         }
 
-        
+        /// <summary>
+        /// Gets the current system stats asynchronously.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="SystemStats"/> object if found; ofthwerise, a defaulty empty stat </returns>
+        public async Task<SystemStats> GetSystemStatsAsync()
+        {
+            HttpResponseMessage response = await _client.GetAsync("/api/trpc/monitor.getSystemStats");
+            string json = await response.Content.ReadAsStringAsync();
+            var rootResponse = JsonSerializer.Deserialize<RootResponse<SystemStats>>(
+                json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+
+            var stats = rootResponse?.Result?.Data?.Json;
+
+            return stats ?? new SystemStats
+            {
+                Uptime = 0,
+                MemInfo = new MemInfo
+                {
+                    TotalMemMb = 0,
+                    UsedMemMb = 0,
+                    FreeMemMb = 0,
+                    UsedMemPercentage = 0,
+                    FreeMemPercentage = 0
+                },
+                DiskInfo = new DiskInfo
+                {
+                    TotalGb = "0",
+                    UsedGb = "0",
+                    FreeGb = "0",
+                    UsedPercentage = "0",
+                    FreePercentage = "0"
+                },
+                CpuInfo = new CpuInfo
+                {
+                    UsedPercentage = 0,
+                    Count = 0,
+                    LoadAvg = Array.Empty<double>()
+                },
+                Network = new NetworkInfo
+                {
+                    InputMb = 0,
+                    OutputMb = 0
+                }
+            };
+        }
+
+
 
 
     }
