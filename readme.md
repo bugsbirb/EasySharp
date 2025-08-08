@@ -1,18 +1,19 @@
 
 First .NET project, so be kind
+It's an API wrapper for Easypanel
 
 
 Checklist:
-- [ ] User
+User
   - [ x ] GetUser
-- [ ] Deployments
+Deployments
  - [ ] Deploy
  - [ ] Cancel
  - [ ] Rebuild
-- [ ] Apps
+Apps
  - [ ] Rename
- - [ ] Delete
- - [ ] Update
+  - [ ] Delete
+  - [ ] Update
 
 More to add to the checklist, just can't rn
  
