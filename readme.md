@@ -6,5 +6,6 @@ It's an API wrapper for Easypanel
 - `GetServicesAsync`
 - `GetProjectsAsync`
 - `GetSystemStatsAsync`
+- `CreateServiceAsync`
 
  
