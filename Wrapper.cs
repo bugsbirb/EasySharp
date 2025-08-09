@@ -7,7 +7,6 @@ namespace EasySharp
     {
         private readonly HttpClient _client;
 
-
         public Easypanel(string baseUrl, string? apiKey = null)
         {
             _client = new HttpClient();
@@ -20,10 +19,19 @@ namespace EasySharp
             }
         }
 
-
         public async Task<List<Project>> GetProjectsAsync()
         {
-            HttpResponseMessage response = await _client.GetAsync("/api/trpc/projects.listProjectsAndServices");
+            HttpResponseMessage response = await _client.GetAsync(
+                "/api/trpc/projects.listProjectsAndServices"
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
             response.EnsureSuccessStatusCode();
 
             string json = await response.Content.ReadAsStringAsync();
@@ -36,16 +44,29 @@ namespace EasySharp
             return rootResponse?.Result?.Data?.Json?.Projects ?? new List<Project>();
         }
 
-
-        public async Task<List<Service>> GetServicesAsync()
+        public async Task<List<Service>> GetAppsAsync()
         {
-            HttpResponseMessage response = await _client.GetAsync("/api/trpc/projects.listProjectsAndServices");
+            HttpResponseMessage response = await _client.GetAsync(
+                "/api/trpc/projects.listProjectsAndServices"
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
             response.EnsureSuccessStatusCode();
 
             string json = await response.Content.ReadAsStringAsync();
             var rootResponse = JsonSerializer.Deserialize<RootResponse<Root>>(
                 json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                }
             );
             return rootResponse?.Result?.Data?.Json?.services ?? new List<Service>();
         }
@@ -53,6 +74,14 @@ namespace EasySharp
         public async Task<User> GetUserAsync()
         {
             HttpResponseMessage response = await _client.GetAsync("api/trpc/auth.getUser");
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
             response.EnsureSuccessStatusCode();
 
             string json = await response.Content.ReadAsStringAsync();
@@ -62,16 +91,341 @@ namespace EasySharp
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
-            return rootResponse?.Result?.Data?.Json ?? new User
-            {
-                Id = string.Empty,
-                CreatedAt = DateTime.MinValue,
-                Email = string.Empty,
-                Admin = false,
-                ApiToken = string.Empty
-            };
+            return rootResponse?.Result?.Data?.Json
+                ?? new User
+                {
+                    Id = string.Empty,
+                    CreatedAt = DateTime.MinValue,
+                    Email = string.Empty,
+                    Admin = false,
+                    ApiToken = string.Empty,
+                };
         }
-        public async Task<Success> CreateServiceAsync(
+
+        public async Task<Success> DeployServiceAsync(
+            string projectName,
+            string serviceName,
+            bool? forceRebuild
+        )
+        {
+            var Tiedup = new
+            {
+                json = new
+                {
+                    projectName,
+                    serviceName,
+                    forceRebuild = forceRebuild ?? false,
+                },
+            };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.app.deployService",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> DeployComposeAsync(
+            string projectName,
+            string serviceName,
+            bool? forceRebuild
+        )
+        {
+            var Tiedup = new
+            {
+                json = new
+                {
+                    projectName,
+                    serviceName,
+                    forceRebuild = forceRebuild ?? false,
+                },
+            };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.compose.deployService",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> StopComposeAsync(string projectName, string serviceName)
+        {
+            var Tiedup = new { json = new { projectName, serviceName } };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.compose.stopService",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> DestroyComposeAsync(string projectName, string serviceName)
+        {
+            var Tiedup = new { json = new { projectName, serviceName } };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.compose.destroyService",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> StartComposeAsync(string projectName, string serviceName)
+        {
+            var Tiedup = new { json = new { projectName, serviceName } };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.compose.startService",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> StartAppAsync(string projectName, string serviceName)
+        {
+            var Tiedup = new { json = new { projectName, serviceName } };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.app.startService",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> StopAppAsync(string projectName, string serviceName)
+        {
+            var Tiedup = new { json = new { projectName, serviceName } };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.app.stopService",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> DestroyAppAsync(string projectName, string serviceName)
+        {
+            var Tiedup = new { json = new { projectName, serviceName } };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.app.destroyService",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> RefreshDeployTokenAsync(string projectName, string serviceName)
+        {
+            var Tiedup = new { json = new { projectName, serviceName } };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.app.refreshDeployToken",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> EnableGithubDeployAsync(string projectName, string serviceName)
+        {
+            var Tiedup = new { json = new { projectName, serviceName } };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.app.enableGithubDeploy",
+                content
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+
+            return new Success { success = true };
+        }
+
+        public async Task<Success> DisableGithubDeployAsync(string projectName, string serviceName)
+        {
+            var Tiedup = new { json = new { projectName, serviceName } };
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.app.disableGithubDeploy",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> CreateUserAsync(string email, string password, bool? admin)
+        {
+            var Tiedup = new
+            {
+                json = new
+                {
+                    email,
+                    password,
+                    admin = admin ?? false,
+                },
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/users.createUser",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return new Success { success = true };
+        }
+
+        public async Task<Success> CreateAppAsync(
             string projectName,
             string serviceName,
             string? sourceType = null,
@@ -109,7 +463,7 @@ namespace EasySharp
                 var source = new Dictionary<string, object>
                 {
                     ["type"] = sourceType,
-                    ["image"] = sourceImage
+                    ["image"] = sourceImage,
                 };
 
                 if (!string.IsNullOrEmpty(sourceUsername))
@@ -126,7 +480,7 @@ namespace EasySharp
                 payload["build"] = new Dictionary<string, object>
                 {
                     ["type"] = buildType,
-                    ["file"] = buildFile
+                    ["file"] = buildFile,
                 };
             }
 
@@ -137,7 +491,9 @@ namespace EasySharp
 
             if (basicAuth != null && basicAuth.Any())
             {
-                payload["basicAuth"] = basicAuth.Select(x => new { username = x.username, password = x.password }).ToArray();
+                payload["basicAuth"] = basicAuth
+                    .Select(x => new { username = x.username, password = x.password })
+                    .ToArray();
             }
 
             if (deploy != null)
@@ -167,17 +523,19 @@ namespace EasySharp
                     memoryReservation,
                     memoryLimit,
                     cpuReservation,
-                    cpuLimit
+                    cpuLimit,
                 };
             }
 
-            if (maintenanceEnabled ||
-                !string.IsNullOrEmpty(maintenanceTitle) ||
-                !string.IsNullOrEmpty(maintenanceSubtitle) ||
-                !string.IsNullOrEmpty(maintenanceCustomLogo) ||
-                !string.IsNullOrEmpty(maintenanceCustomCss) ||
-                maintenanceHideLogo ||
-                maintenanceHideLinks)
+            if (
+                maintenanceEnabled
+                || !string.IsNullOrEmpty(maintenanceTitle)
+                || !string.IsNullOrEmpty(maintenanceSubtitle)
+                || !string.IsNullOrEmpty(maintenanceCustomLogo)
+                || !string.IsNullOrEmpty(maintenanceCustomCss)
+                || maintenanceHideLogo
+                || maintenanceHideLinks
+            )
             {
                 payload["maintenance"] = new
                 {
@@ -187,7 +545,7 @@ namespace EasySharp
                     customLogo = maintenanceCustomLogo ?? string.Empty,
                     customCss = maintenanceCustomCss ?? string.Empty,
                     hideLogo = maintenanceHideLogo,
-                    hideLinks = maintenanceHideLinks
+                    hideLinks = maintenanceHideLinks,
                 };
             }
             var Tiedup = new { json = payload };
@@ -197,23 +555,28 @@ namespace EasySharp
                 "application/json"
             );
 
-            HttpResponseMessage response = await _client.PostAsync("/api/trpc/services.app.createService", content);
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.app.createService",
+                content
+            );
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                throw new Exception($"API call failed with status {response.StatusCode}: {errorContent}");
+                throw new Exception(
+                    $"[Easypanel API] API call failed with status {response.StatusCode} | {errorContent}"
+                );
             }
 
             response.EnsureSuccessStatusCode();
 
-
             return new Success { success = true };
         }
 
-
         public async Task<SystemStats> GetSystemStatsAsync()
         {
-            HttpResponseMessage response = await _client.GetAsync("/api/trpc/monitor.getSystemStats");
+            HttpResponseMessage response = await _client.GetAsync(
+                "/api/trpc/monitor.getSystemStats"
+            );
             string json = await response.Content.ReadAsStringAsync();
             var rootResponse = JsonSerializer.Deserialize<RootResponse<SystemStats>>(
                 json,
@@ -222,44 +585,34 @@ namespace EasySharp
 
             var stats = rootResponse?.Result?.Data?.Json;
 
-            return stats ?? new SystemStats
-            {
-                Uptime = 0,
-                MemInfo = new MemInfo
+            return stats
+                ?? new SystemStats
                 {
-                    TotalMemMb = 0,
-                    UsedMemMb = 0,
-                    FreeMemMb = 0,
-                    UsedMemPercentage = 0,
-                    FreeMemPercentage = 0
-                },
-                DiskInfo = new DiskInfo
-                {
-                    TotalGb = "0",
-                    UsedGb = "0",
-                    FreeGb = "0",
-                    UsedPercentage = "0",
-                    FreePercentage = "0"
-                },
-                CpuInfo = new CpuInfo
-                {
-                    UsedPercentage = 0,
-                    Count = 0,
-                    LoadAvg = Array.Empty<double>()
-                },
-                Network = new NetworkInfo
-                {
-                    InputMb = 0,
-                    OutputMb = 0
-                }
-            };
+                    Uptime = 0,
+                    MemInfo = new MemInfo
+                    {
+                        TotalMemMb = 0,
+                        UsedMemMb = 0,
+                        FreeMemMb = 0,
+                        UsedMemPercentage = 0,
+                        FreeMemPercentage = 0,
+                    },
+                    DiskInfo = new DiskInfo
+                    {
+                        TotalGb = "0",
+                        UsedGb = "0",
+                        FreeGb = "0",
+                        UsedPercentage = "0",
+                        FreePercentage = "0",
+                    },
+                    CpuInfo = new CpuInfo
+                    {
+                        UsedPercentage = 0,
+                        Count = 0,
+                        LoadAvg = Array.Empty<double>(),
+                    },
+                    Network = new NetworkInfo { InputMb = 0, OutputMb = 0 },
+                };
         }
-
-
-
-
-
-
-
     }
 }

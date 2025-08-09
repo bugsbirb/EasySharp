@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 
-
 public class Success
 {
     public required bool success { get; set; }
@@ -10,7 +9,6 @@ public class CreateServiceRequest
 {
     public required CreateProject Json { get; set; }
 }
-
 
 public partial class CreateProject
 {
@@ -52,7 +50,6 @@ public partial class CreateProject
 }
 
 public class Domain
-
 {
     public string Host { get; set; } = "";
 }
