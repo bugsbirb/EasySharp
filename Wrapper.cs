@@ -206,6 +206,7 @@ namespace EasySharp
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
+        
             response.EnsureSuccessStatusCode();
             return true;
         }
@@ -350,7 +351,6 @@ namespace EasySharp
                 projectName = projectName,
                 serviceName = serviceName,
             };
-
             PayloadWrapper<ServicePayload> Tiedup = new PayloadWrapper<ServicePayload>
             {
                 json = payload
