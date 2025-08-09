@@ -5,7 +5,30 @@ First .NET project, so be kind It's an API wrapper for Easypanel
 dotnet add package EasySharp
 ```
 
-# Functions (So Far)
+### Basic Use
+```c#
+using EasySharp;
+
+var api = new Easypanel("Easypanel Panel URL", "API token");
+```
+
+```c#
+var deploy = await api.DeployServiceAsync(
+    projectName: "Cool Project",
+    serviceName: "Egg",
+    forceRebuild: false);
+
+if (deploy.success)
+{
+    Console.WriteLine("Deployment succeeded.");
+}
+else
+{
+    Console.WriteLine("Deployment failed.");
+}
+```
+
+# Function Map
 
 ## Apps
 - `GetAppsAsync`
