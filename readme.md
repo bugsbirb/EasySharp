@@ -1,5 +1,10 @@
 First .NET project, so be kind It's an API wrapper for Easypanel
 
+### Install
+```
+dotnet add package EasySharp
+```
+
 # Functions (So Far)
 
 ## Apps
