@@ -1,4 +1,4 @@
-First .NET project, so be kind It's an API wrapper for Easypanel
+First .NET project, still learning the language.
 
 ### Install
 ```
