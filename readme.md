@@ -9,16 +9,16 @@ dotnet add package EasySharp
 ```c#
 using EasySharp;
 
-var api = new Easypanel("Easypanel Panel URL", "API token");
+Easypanel api = new Easypanel("Easypanel Panel URL", "API token");
 ```
 
 ```c#
-var deploy = await api.DeployServiceAsync(
+bool deploy = await api.DeployServiceAsync(
     projectName: "Cool Project",
     serviceName: "Egg",
     forceRebuild: false);
 
-if (deploy.success)
+if (deploy)
 {
     Console.WriteLine("Deployment succeeded.");
 }

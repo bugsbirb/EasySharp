@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 public class Root
 {
     public List<Service>? services { get; set; }
@@ -19,6 +20,19 @@ public class Service
     public ServiceBuild? build { get; set; }
     public object? createDotEnv { get; set; }
     public Commit? commit { get; set; }
+}
+
+
+public class PayloadWrapper<T>
+{
+    public required T json { get; set; }
+}
+public class ServicePayload
+{
+    public required string projectName { get; set; }
+    public required string serviceName { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? forceRebuild { get; set; }
 }
 
 public partial class Deploy

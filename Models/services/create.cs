@@ -113,6 +113,12 @@ public partial class Resources
     public long CpuLimit { get; set; }
 }
 
+public class CreatePayloadTiedUp
+{
+    [JsonPropertyName("json")]
+    public required Dictionary<string, object> Json { get; set; }
+}
+
 public partial class CreateSource
 {
     [JsonPropertyName("type")]
