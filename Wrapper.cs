@@ -99,45 +99,6 @@ namespace EasySharp
                 };
         }
 
-        public async Task<bool> DeployServiceAsync(
-            string projectName,
-            string serviceName,
-            bool forceRebuild = false
-        )
-        {
-            ServicePayload payload = new ServicePayload
-            {
-                projectName = projectName,
-                serviceName = serviceName,
-                forceRebuild = forceRebuild
-            };
-
-            PayloadWrapper<ServicePayload> TiedUp = new PayloadWrapper<ServicePayload>
-            {
-                json = payload
-            };
-
-            StringContent content = new StringContent(
-                JsonSerializer.Serialize(TiedUp),
-                System.Text.Encoding.UTF8,
-                "application/json"
-            );
-            HttpResponseMessage response = await _client.PostAsync(
-                "/api/trpc/services.app.deployService",
-                content
-            );
-            if (!response.IsSuccessStatusCode)
-            {
-                string errorContent = await response.Content.ReadAsStringAsync();
-                string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
-                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
-                );
-            }
-            response.EnsureSuccessStatusCode();
-            return true;;
-        }
-
         public async Task<bool> DeployComposeAsync(
             string projectName,
             string serviceName,
@@ -276,6 +237,45 @@ namespace EasySharp
             }
             response.EnsureSuccessStatusCode();
             return true;;
+        }
+        
+        public async Task<bool> DeployAppAsync(
+            string projectName,
+            string serviceName,
+            bool forceRebuild = false
+        )
+        {
+            ServicePayload payload = new ServicePayload
+            {
+                projectName = projectName,
+                serviceName = serviceName,
+                forceRebuild = forceRebuild
+            };
+
+            PayloadWrapper<ServicePayload> TiedUp = new PayloadWrapper<ServicePayload>
+            {
+                json = payload
+            };
+
+            StringContent content = new StringContent(
+                JsonSerializer.Serialize(TiedUp),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync(
+                "/api/trpc/services.app.deployService",
+                content
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorContent = await response.Content.ReadAsStringAsync();
+                string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return true;
         }
 
         public async Task<bool> StartAppAsync(string projectName, string serviceName)
