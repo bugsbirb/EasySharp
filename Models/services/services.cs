@@ -33,6 +33,8 @@ public class ServicePayload
     public required string serviceName { get; set; }
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? forceRebuild { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? notes { get; set; }
 }
 
 public partial class Deploy

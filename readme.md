@@ -30,7 +30,10 @@ else
 
 # Function Map
 
-## Apps
+## Apps/Projects
+- `GetProjectsAsync`
+- `GetAppAsync`
+- `GetProjectAsync`
 - `GetAppsAsync`
 - `StartAppAsync`
 - `StopAppAsync`
@@ -52,5 +55,4 @@ else
 - `DestroyComposeAsync`
 
 ## Other
-- `GetProjectsAsync`
 - `GetSystemStatsAsync`

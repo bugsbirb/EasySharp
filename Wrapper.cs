@@ -71,6 +71,61 @@ namespace EasySharp
             return rootResponse?.Result?.Data?.Json?.services ?? new List<Service>();
         }
 
+        public async Task<Service> GetAppAsync(
+            string projectName,
+            string serviceName
+        )
+        {
+            HttpResponseMessage response = await _client.GetAsync(
+                $"/api/trpc/projects.inspectService?input={{\"json\":{{\"projectName\":\"{projectName}\",\"serviceName\":\"{serviceName}\"}}}}"
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorContent = await response.Content.ReadAsStringAsync();
+                string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+
+            string json = await response.Content.ReadAsStringAsync();
+
+            RootResponse<Service>? rootResponse = JsonSerializer.Deserialize<RootResponse<Service>>(
+                json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+            return rootResponse?.Result?.Data?.Json ?? new Service();
+            
+        }
+
+        public async Task<Project> GetProjectAsync(
+            string projectName
+        )
+        {
+            HttpResponseMessage response = await _client.GetAsync(
+                $"/api/trpc/projects.inspectProject?input={{\"json\":{{\"projectName\":\"{projectName}\"}}}}"
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorContent = await response.Content.ReadAsStringAsync();
+                string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new Exception(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+
+            string json = await response.Content.ReadAsStringAsync();
+
+            RootResponse<Project>? rootResponse = JsonSerializer.Deserialize<RootResponse<Project>>(
+                json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+            return rootResponse?.Result?.Data?.Json ?? new Project { Name = string.Empty };
+            
+        }
+
         public async Task<User> GetUserAsync()
         {
             HttpResponseMessage response = await _client.GetAsync("api/trpc/auth.getUser");
@@ -130,7 +185,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -163,7 +218,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -197,7 +252,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -231,7 +286,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -270,7 +325,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -278,17 +333,49 @@ namespace EasySharp
             return true;
         }
 
+
+        public async Task<bool> SetServiceNote(string projectName, string serviceName, string note)
+        {
+            ServicePayload payload = new ServicePayload
+            {
+                projectName = projectName,
+                serviceName = serviceName,
+                notes = note
+            };
+            PayloadWrapper<ServicePayload> Tiedup = new PayloadWrapper<ServicePayload>
+            {
+                json = payload
+            };
+            StringContent content = new StringContent(
+                JsonSerializer.Serialize(Tiedup),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            HttpResponseMessage response = await _client.PostAsync("/api/trpc/services.common.setName", content);
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorContent = await response.Content.ReadAsStringAsync();
+                string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
+                throw new HttpRequestException(
+                    $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
+                );
+            }
+            response.EnsureSuccessStatusCode();
+            return true;
+
+        }
+
         public async Task<bool> StartAppAsync(string projectName, string serviceName)
         {
             ServicePayload payload = new ServicePayload
-                {
-                    projectName = projectName,
-                    serviceName = serviceName,
-                };
+            {
+                projectName = projectName,
+                serviceName = serviceName,
+            };
             PayloadWrapper<ServicePayload> Tiedup = new PayloadWrapper<ServicePayload>
-                {
-                    json = payload
-                };
+            {
+                json = payload
+            };
 
             StringContent content = new StringContent(
                 JsonSerializer.Serialize(Tiedup),
@@ -303,12 +390,12 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
             response.EnsureSuccessStatusCode();
-            return true;;
+            return true;
         }
 
         public async Task<bool> StopAppAsync(string projectName, string serviceName)
@@ -336,7 +423,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -368,7 +455,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -401,7 +488,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -436,7 +523,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -469,7 +556,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -501,7 +588,7 @@ namespace EasySharp
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
                 string requestUri = response.RequestMessage?.RequestUri?.ToString() ?? "unknown";
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] {requestUri} failed with status {response.StatusCode} | {errorContent}"
                 );
             }
@@ -647,7 +734,7 @@ namespace EasySharp
             if (!response.IsSuccessStatusCode)
             {
                 string errorContent = await response.Content.ReadAsStringAsync();
-                throw new Exception(
+                throw new HttpRequestException(
                     $"[Easypanel API] API call failed with status {response.StatusCode} | {errorContent}"
                 );
             }
